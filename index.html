@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Historique des paiements</title>
+
+    <link rel="stylesheet" href="historique.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="page-header">
+
+        <div>
+            <h1>Historique des paiements</h1>
+            <p>Suivi des paiements, tickets et connexions MikroTik</p>
+        </div>
+
+        <button id="refreshBtn" class="btn refresh">
+            ↻ Actualiser
+        </button>
+
+    </header>
+
+
+    <!-- =====================================================
+         STATISTIQUES
+    ====================================================== -->
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <span class="stat-label">Total</span>
+            <strong id="statTotal">0</strong>
+        </div>
+
+        <div class="stat-card success">
+            <span class="stat-label">Paiements réussis</span>
+            <strong id="statSuccess">0</strong>
+        </div>
+
+        <div class="stat-card danger">
+            <span class="stat-label">Paiements échoués</span>
+            <strong id="statFailed">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">Tickets créés</span>
+            <strong id="statTickets">0</strong>
+        </div>
+
+        <div class="stat-card success">
+            <span class="stat-label">Connectés</span>
+            <strong id="statConnected">0</strong>
+        </div>
+
+        <div class="stat-card warning">
+            <span class="stat-label">Jamais connectés</span>
+            <strong id="statNeverConnected">0</strong>
+        </div>
+
+
+        <div class="stat-card fleury">
+    <span class="stat-label">Montant des tickets vendus</span>
+    <strong id="fleurySales">0 FCFA</strong>
+</div>
+
+<div class="stat-card fleury-paid">
+    <span class="stat-label">Montant déjà versé</span>
+    <strong id="fleuryPaid">0 FCFA</strong>
+</div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FILTRES
+    ====================================================== -->
+
+    <section class="filters">
+
+        <div class="filter-group">
+
+            <label for="day">
+                Jour
+            </label>
+
+            <select id="day">
+
+                <option value="">Tous</option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="month">
+                Mois
+            </label>
+
+            <select id="month">
+
+                <option value="">Tous</option>
+
+                <option value="1">Janvier</option>
+                <option value="2">Février</option>
+                <option value="3">Mars</option>
+                <option value="4">Avril</option>
+                <option value="5">Mai</option>
+                <option value="6">Juin</option>
+                <option value="7">Juillet</option>
+                <option value="8">Août</option>
+                <option value="9">Septembre</option>
+                <option value="10">Octobre</option>
+                <option value="11">Novembre</option>
+                <option value="12">Décembre</option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="year">
+                Année
+            </label>
+
+            <select id="year">
+
+                <option value="">Toutes</option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="phone">
+                Numéro
+            </label>
+
+            <input
+                type="text"
+                id="phone"
+                placeholder="Ex : 672407654"
+            >
+
+        </div>
+
+
+
+        <div class="filter-group">
+
+    <label for="router">
+        Routeur
+    </label>
+
+    <select id="router">
+
+        <option value="">
+            Tous les routeurs
+        </option>
+
+    </select>
+
+</div>
+
+
+        <div class="filter-group">
+
+            <label for="paymentStatus">
+                Paiement
+            </label>
+
+            <select id="paymentStatus">
+
+                <option value="">
+                    Tous
+                </option>
+
+                <option value="SUCCESS">
+                    Réussi
+                </option>
+
+                <option value="PENDING">
+                    En attente
+                </option>
+
+                <option value="FAILED">
+                    Échoué
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="connection">
+                Connexion
+            </label>
+
+            <select id="connection">
+
+                <option value="">
+                    Toutes
+                </option>
+
+                <option value="CONNECTED">
+                    Connectés
+                </option>
+
+                <option value="NEVER">
+                    Jamais connectés
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-actions">
+
+            <button
+                id="searchBtn"
+                class="btn primary"
+            >
+                🔎 Rechercher
+            </button>
+
+            <button
+                id="resetBtn"
+                class="btn secondary"
+            >
+                Réinitialiser
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MESSAGE
+    ====================================================== -->
+
+    <div
+        id="message"
+        class="message hidden"
+    ></div>
+
+
+    <!-- =====================================================
+         TABLE
+    ====================================================== -->
+
+    <section class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Date</th>
+
+                    <th>Téléphone</th>
+
+                    <th>Opérateur</th>
+
+                    <th>Montant</th>
+
+                    <th>Paiement</th>
+
+                    
+
+
+                    <th>Ticket</th>
+
+<th>Routeur</th>
+
+<th>Connexion</th>
+
+<th>MikroTik</th>
+
+                    <th>Expiration</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="paymentsTable">
+
+                <tr>
+
+                    <td
+                        colspan="11"
+                        class="loading"
+                    >
+                        Chargement...
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+</div>
+
+
+<!-- =====================================================
+     MODAL DETAILS
+====================================================== -->
+
+<div
+    id="detailsModal"
+    class="modal hidden"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>Détails du paiement</h2>
+
+            <button
+                id="closeModal"
+                class="close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div id="detailsContent"></div>
+
+    </div>
+
+</div>
+
+
+<script src="historique.js"></script>
+
+</body>
+</html>
