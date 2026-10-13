@@ -16,6 +16,16 @@ body {
     color: #1f2937;
 }
 
+.hidden { display: none !important; }
+
+.auth-panel { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.auth-card { width: min(100%, 420px); display: grid; gap: 12px; padding: 30px; background: #fff; border-radius: 14px; box-shadow: 0 12px 40px #17255418; }
+.auth-card h1 { font-size: 1.4rem; }
+.auth-card p { color: #64748b; line-height: 1.5; }
+.auth-card input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+.auth-card button { margin-top: 8px; }
+.auth-message { color: #b42318 !important; }
+
 
 .container {
 

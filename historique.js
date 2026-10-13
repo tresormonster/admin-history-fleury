@@ -5,7 +5,40 @@
 const API_URL =
     "https://wifi-backend-y5v6.onrender.com";
 
-    
+const TOKEN_KEY = "fleury-history.admin-token";
+let accessToken = sessionStorage.getItem(TOKEN_KEY);
+const authPanel = document.getElementById("authPanel");
+const loginForm = document.getElementById("adminLoginForm");
+const authMessage = document.getElementById("authMessage");
+const appContainer = document.querySelector(".container");
+const logoutBtn = document.getElementById("logoutBtn");
+
+function apiFetch(url, options = {}) {
+    const headers = new Headers(options.headers || {});
+    if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+    return fetch(url, { ...options, headers });
+}
+
+function showLogin(message = "") {
+    accessToken = null;
+    sessionStorage.removeItem(TOKEN_KEY);
+    appContainer.classList.add("hidden");
+    authPanel.classList.remove("hidden");
+    authMessage.textContent = message;
+    authMessage.classList.toggle("hidden", !message);
+}
+
+async function showHistoryApp() {
+    const response = await apiFetch(`${API_URL}/users/me`);
+    if (!response.ok) throw new Error("Session expirée. Reconnecte-toi.");
+    const user = await response.json();
+    if (user.role !== "ADMIN") throw new Error("Cette page est réservée à un compte administrateur.");
+    authPanel.classList.add("hidden");
+    appContainer.classList.remove("hidden");
+    await loadRouters();
+    await loadHistory();
+    await loadFleurySummary();
+}
 
 
 // =====================================================
@@ -281,7 +314,7 @@ async function loadRouters() {
     try {
 
         const response =
-            await fetch(`${API_URL}/routers`);
+            await apiFetch(`${API_URL}/routers`);
 
         if (!response.ok) {
 
@@ -398,7 +431,7 @@ async function loadHistory() {
     try {
 
         const response =
-            await fetch(
+            await apiFetch(
                 `${API_URL}/payments/fleury/history?${params.toString()}`
             );
 
@@ -445,7 +478,7 @@ async function loadHistory() {
 
 async function loadFleurySummary() {
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `${API_URL}/payments/fleury/summary`
         );
 
@@ -1243,5 +1276,35 @@ detailsModal.addEventListener(
 
 initializeDays();
 initializeYears();
-loadHistory();
-loadFleurySummary();
+loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submit = loginForm.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    authMessage.classList.add("hidden");
+    try {
+        const credentials = Object.fromEntries(new FormData(loginForm));
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(credentials),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Connexion refusée.");
+        accessToken = result.access_token;
+        if (!accessToken) throw new Error("Le backend n’a pas retourné de jeton de session.");
+        sessionStorage.setItem(TOKEN_KEY, accessToken);
+        await showHistoryApp();
+    } catch (error) {
+        showLogin(error.message || "Connexion impossible.");
+    } finally {
+        submit.disabled = false;
+    }
+});
+
+logoutBtn.addEventListener("click", () => showLogin());
+
+if (accessToken) {
+    showHistoryApp().catch((error) => showLogin(error.message));
+} else {
+    showLogin();
+}

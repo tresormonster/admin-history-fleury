@@ -11,7 +11,20 @@
 
 <body>
 
-<div class="container">
+<main id="authPanel" class="auth-panel">
+    <form id="adminLoginForm" class="auth-card">
+        <h1>Connexion administrateur</h1>
+        <p>Connecte-toi avec le compte administrateur pour consulter l’historique Fleury.</p>
+        <label for="adminEmail">Adresse email</label>
+        <input id="adminEmail" name="email" type="email" autocomplete="username" required>
+        <label for="adminPassword">Mot de passe</label>
+        <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
+        <button class="btn refresh" type="submit">Se connecter</button>
+        <p id="authMessage" class="auth-message hidden" role="alert"></p>
+    </form>
+</main>
+
+<div class="container hidden">
 
     <!-- =====================================================
          HEADER
@@ -27,6 +40,7 @@
         <button id="refreshBtn" class="btn refresh">
             ↻ Actualiser
         </button>
+        <button id="logoutBtn" class="btn refresh" type="button">Déconnexion</button>
 
     </header>
 
