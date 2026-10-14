@@ -7,6 +7,7 @@ const API_URL =
 
 const TOKEN_KEY = "fleury-history.admin-token";
 let accessToken = sessionStorage.getItem(TOKEN_KEY);
+let currentUserRole = null;
 const authPanel = document.getElementById("authPanel");
 const loginForm = document.getElementById("adminLoginForm");
 const authMessage = document.getElementById("authMessage");
@@ -32,10 +33,16 @@ async function showHistoryApp() {
     const response = await apiFetch(`${API_URL}/users/me`);
     if (!response.ok) throw new Error("Session expirée. Reconnecte-toi.");
     const user = await response.json();
-    if (user.role !== "ADMIN") throw new Error("Cette page est réservée à un compte administrateur.");
+    if (user.role !== "ADMIN" && user.role !== "USER") {
+        throw new Error("Ce compte n’a pas accès à l’historique Fleury.");
+    }
+    currentUserRole = user.role;
     authPanel.classList.add("hidden");
     appContainer.classList.remove("hidden");
-    await loadRouters();
+    const routers = await loadRouters();
+    if (currentUserRole === "USER" && !routers.some((router) => router.code === "FLEURY WIFI")) {
+        throw new Error("Attribue le routeur FLEURY WIFI à ce compte depuis le tableau admin.");
+    }
     await loadHistory();
     await loadFleurySummary();
 }
@@ -314,7 +321,7 @@ async function loadRouters() {
     try {
 
         const response =
-            await apiFetch(`${API_URL}/routers`);
+            await apiFetch(`${API_URL}${currentUserRole === "USER" ? "/routers/my" : "/routers"}`);
 
         if (!response.ok) {
 
@@ -326,7 +333,11 @@ async function loadRouters() {
         const routers =
             await response.json();
 
-        routers.forEach(router => {
+        const visibleRouters = currentUserRole === "USER"
+            ? routers.filter((router) => router.code === "FLEURY WIFI")
+            : routers;
+
+        visibleRouters.forEach(router => {
 
             const option =
                 document.createElement("option");
@@ -339,12 +350,16 @@ async function loadRouters() {
 
         });
 
+        return visibleRouters;
+
     } catch (error) {
 
         console.error(
             "Erreur chargement routeurs :",
             error
         );
+
+        return [];
 
     }
 }
@@ -432,7 +447,7 @@ async function loadHistory() {
 
         const response =
             await apiFetch(
-                `${API_URL}/payments/fleury/history?${params.toString()}`
+                `${API_URL}${currentUserRole === "USER" ? "/payments/fleury/owner/history" : "/payments/fleury/history"}?${params.toString()}`
             );
 
         if (!response.ok) {
@@ -479,7 +494,7 @@ async function loadHistory() {
 async function loadFleurySummary() {
     try {
         const response = await apiFetch(
-            `${API_URL}/payments/fleury/summary`
+            `${API_URL}${currentUserRole === "USER" ? "/payments/fleury/owner/summary" : "/payments/fleury/summary"}`
         );
 
         if (!response.ok) {
